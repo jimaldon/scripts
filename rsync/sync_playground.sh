@@ -1,28 +1,50 @@
 #!/bin/bash
 
-if [[ $# -eq 0 ]] ; then
-    echo 'Please enter the absolute path to folder which you wanna sync with the remote servers.'
-    echo 'Example: $ ./sync.sh /path/to/output_directory'
+sync () {
+    rsync -e ssh -avz --delete-after --progress $1 jim@198.180.182.226:$2
+    rsync -e ssh -avz --delete-after --progress $1 jim@198.180.182.227:$2
+    rsync -e ssh -avz --delete-after --progress $1 jim@198.180.182.231:$2
+    rsync -e ssh -avz --delete-after --progress $1 jim@198.180.182.232:$2
+}
+
+if [[ $# -eq 0 ]] || [[ $# -gt 2 ]]; then
+    echo 'Please enter either one or two arguments indicating the paths of the folder to be synced'
+    echo 'Example: $ ./sync.sh /path/to/sync_directory_on_local_and_remote'
+    echo 'Example: $ ./sync.sh /path/to/sync_directory_local /path/to/sync_directory_remote'
     exit 0
 fi
 
-ARG=${1%/}
+ARG=$(readlink -f "$1")"/"
+
 if [[ $# -eq 1 ]]; then
-    DST=${ARG%/*}"/"
+    temp1=${ARG%/}
+    DST=${temp1%/*}"/"
+    ONEARG=true
 elif [[ $# -eq 2 ]]; then
-    temp=${2%/}
-    DST=${temp%/*}"/"
+    temp2=${2%/}
+    DST=${temp2%/*}"/"
+    ONEARG=false
 fi
 
-SCRIPT=$(readlink -f "$0")
-SCRIPTPATH=$(dirname "$SCRIPT")
-
-if [ ${ARG::9} = "/home/jim" ]  || [ ${ARG::10} = "/data4/jim" ]; then
-    rsync -e ssh -avz --delete-after --progress $ARG jim@198.180.182.226:$DST
-    rsync -e ssh -avz --delete-after --progress $ARG jim@198.180.182.227:$DST
-    rsync -e ssh -avz --delete-after --progress $ARG jim@198.180.182.231:$DST
-    rsync -e ssh -avz --delete-after --progress $ARG jim@198.180.182.232:$DST
+if [ "$ONEARG" = true ]; then
+    if  [ ${ARG::9} = "/home/jim" ]; then
+        echo "Syncing $ARG in local with $DST in remote."
+		sync "$ARG" "$DST"
+    else
+        echo 'Syncing folders not in /home/jim is unpredictable. Use scripts with two arguments if you still wanna proceed with syncing.'
+        echo 'Aborting'
+    fi
 else
-    echo 'Syncing folders not in home or /data4/ is unpredictable. If it is within ~/ or /data3, you have not provided the full path to the folder.'
-    echo 'Aborting'
+    if  [ ${DST::9} = "/home/jim" ]; then
+        echo "Syncing $ARG in local with $DST in remote."
+		sync "$ARG" "$DST"
+    else
+        echo 'Does jim have permission to write in $DST ?'
+        read -p "y/n" yn
+    	case $yn in
+        	[Yy]* ) echo "Syncing $ARG in local with $DST in remote."; sync "$ARG" "$DST"; break;;
+        	[Nn]* ) exit;;
+        	* ) echo "Please answer yes or no.";;
+    	esac 
+    fi
 fi

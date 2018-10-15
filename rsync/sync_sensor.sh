@@ -1,7 +1,7 @@
 #!/bin/bash
 
 sync () {
-	rsync -e ssh -avz --delete-after --progress $1 jim@10.1.1.136:$2
+	rsync -e ssh -avz --delete-after --progress $1 jim@10.1.1.160:$2
 }
 
 if [[ $# -eq 0 ]] || [[ $# -gt 2 ]]; then
@@ -14,12 +14,12 @@ fi
 ARG=$(readlink -f "$1")"/"
 
 if [[ $# -eq 1 ]]; then
-    temp1=${ARG%/}
-    DST=${temp1%/*}"/"
+    DST=${ARG%/}
+    #DST=${temp1%/*}"/"
     ONEARG=true
 elif [[ $# -eq 2 ]]; then
-    temp2=${2%/}
-    DST=${temp2%/*}"/"
+    DST=${2%/}
+    #DST=${temp2%/*}"/"
     ONEARG=false
 fi
 

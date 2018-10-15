@@ -17,12 +17,12 @@ fi
 ARG=$(readlink -f "$1")"/"
 
 if [[ $# -eq 1 ]]; then
-    temp1=${ARG%/}
-    DST=${temp1%/*}"/"
+    DST=${ARG%/}
+    #DST=${temp1%/*}"/"
     ONEARG=true
 elif [[ $# -eq 2 ]]; then
-    temp2=${2%/}
-    DST=${temp2%/*}"/"
+    DST=${2%/}
+    #DST=${temp2%/*}"/"
     ONEARG=false
 fi
 
